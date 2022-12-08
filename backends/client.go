@@ -7,7 +7,6 @@ import (
 	"github.com/kelseyhightower/confd/backends/consul"
 	"github.com/kelseyhightower/confd/backends/dynamodb"
 	"github.com/kelseyhightower/confd/backends/env"
-	"github.com/kelseyhightower/confd/backends/etcd"
 	"github.com/kelseyhightower/confd/backends/etcdv3"
 	"github.com/kelseyhightower/confd/backends/file"
 	"github.com/kelseyhightower/confd/backends/google"
@@ -28,6 +27,7 @@ type StoreClient interface {
 
 // New is used to create a storage client based on our configuration.
 func New(config Config) (StoreClient, error) {
+
 	if config.Backend == "" {
 		config.Backend = "etcd"
 	}
@@ -49,9 +49,8 @@ func New(config Config) (StoreClient, error) {
 			config.Password,
 		)
 	case "etcd":
-		// Create the etcd client upfront and use it for the life of the process.
-		// The etcdClient is an http.Client and designed to be reused.
-		return etcd.NewEtcdClient(backendNodes, config.ClientCert, config.ClientKey, config.ClientCaKeys, config.BasicAuth, config.Username, config.Password)
+		// etcd v2 has been deprecated and etcdv3 is now the client for both the etcd and etcdv3 backends.
+		return etcdv3.NewEtcdClient(backendNodes, config.ClientCert, config.ClientKey, config.ClientCaKeys, config.BasicAuth, config.Username, config.Password)
 	case "etcdv3":
 		return etcdv3.NewEtcdClient(backendNodes, config.ClientCert, config.ClientKey, config.ClientCaKeys, config.BasicAuth, config.Username, config.Password)
 	case "zookeeper":
@@ -78,6 +77,7 @@ func New(config Config) (StoreClient, error) {
 			"cert":      config.ClientCert,
 			"key":       config.ClientKey,
 			"caCert":    config.ClientCaKeys,
+			"path":      config.Path,
 		}
 		return vault.New(backendNodes[0], config.AuthType, vaultConfig)
 	case "dynamodb":
